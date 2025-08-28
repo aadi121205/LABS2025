@@ -3,29 +3,18 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from collections import Counter
 
-# ------------------------------
-# Load dataset
-# ------------------------------
 data = pd.read_csv("Iris.csv")
 
-# Features: columns 1-4 (ignore col 0 = ID)
 X = data.iloc[:, 1:5].values
 y = data.iloc[:, 5].values
 
-# Split into train (90%) and test (10%)
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.1, random_state=42, stratify=y
 )
 
-# ------------------------------
-# Euclidean distance function
-# ------------------------------
 def euclidean_distance(x1, x2):
     return np.sqrt(np.sum((x1 - x2) ** 2))
 
-# ------------------------------
-# KNN implementation from scratch
-# ------------------------------
 class KNN:
     def __init__(self, k=3):
         self.k = k
@@ -48,13 +37,10 @@ class KNN:
         most_common = Counter(k_neighbor_labels).most_common(1)
         return most_common[0][0]
 
-# ------------------------------
-# Grid Search for best K
-# ------------------------------
 best_k = None
 best_acc = 0
 
-for k in range(1, 16):  # check K = 1 to 15
+for k in range(1, 16):
     knn = KNN(k=k)
     knn.fit(X_train, y_train)
     preds = knn.predict(X_test)
