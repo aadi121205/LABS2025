@@ -28,12 +28,9 @@ class KNN:
         return np.array(predictions)
 
     def _predict(self, x):
-        # Compute distances
         distances = [euclidean_distance(x, x_train) for x_train in self.X_train]
-        # Sort and get indices of k nearest neighbors
         k_idx = np.argsort(distances)[:self.k]
         k_neighbor_labels = [self.y_train[i] for i in k_idx]
-        # Majority vote
         most_common = Counter(k_neighbor_labels).most_common(1)
         return most_common[0][0]
 
