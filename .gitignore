@@ -1,2 +1,9 @@
 gitpush.sh
 DTU-ML-Lab-C4-G2
+.vscode/
+__pycache__/
+.ipynb_checkpoints/
+*.pyc
+data/
+models/
+results/
