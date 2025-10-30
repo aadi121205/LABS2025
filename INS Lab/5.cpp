@@ -1,139 +1,106 @@
-// To implement Hill- cipher encryption decryption
+// To implement Hill- cipher encryption decryption By Aaditya Bhatia 23/CS/004
 
 #include <iostream>
 #include <vector>
 #include <string>
 using namespace std;
 
-const int MOD = 26;
-
 int modInverse(int a, int m) {
     a = a % m;
-    for (int x = 1; x < m; x++) {
-        if ((a * x) % m == 1) return x;
-    }
+    for (int x = 1; x < m; x++)
+        if ((a * x) % m == 1)
+            return x;
     return -1;
 }
 
-vector<vector<int>> getCofactor(const vector<vector<int>>& mat, int p, int q, int n) {
-    vector<vector<int>> temp(n - 1, vector<int>(n - 1));
-    int i = 0, j = 0;
-    for (int row = 0; row < n; row++) {
-        for (int col = 0; col < n; col++) {
-            if (row != p && col != q) {
-                temp[i][j++] = mat[row][col];
-                if (j == n - 1) {
-                    j = 0;
-                    i++;
-                }
-            }
-        }
-    }
-    return temp;
-}
-
-int determinant(const vector<vector<int>>& mat, int n) {
-    int D = 0;
-    if (n == 1) {
-        return mat[0][0];
-    }
-
-    int sign = 1;
-    for (int f = 0; f < n; f++) {
-        vector<vector<int>> temp = getCofactor(mat, 0, f, n);
-        D += sign * mat[0][f] * determinant(temp, n - 1);
-        sign = -sign;
-    }
-    return D;
-}
-
-vector<vector<int>> adjoint(const vector<vector<int>>& mat) {
-    int n = mat.size();
-    vector<vector<int>> adj(n, vector<int>(n));
-    if (n == 1) {
-        adj[0][0] = 1;
-        return adj;
-    }
-    int sign = 1;
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            vector<vector<int>> temp = getCofactor(mat, i, j, n);
-            sign = ((i + j) % 2 == 0) ? 1 : -1;
-            adj[j][i] = (sign * determinant(temp, n - 1) + MOD) % MOD;
-        }
-    }
-    return adj;
-}
-
-vector<vector<int>> inverse(const vector<vector<int>>& mat) {
-    int n = mat.size();
-    int det = determinant(mat, n);
-    det = (det % MOD + MOD) % MOD; // Ensure positive determinant
-
-    int detInverse = modInverse(det, MOD);
-    if (detInverse == -1) {
-        cerr << "Matrix is not invertible. Cannot decrypt." << endl;
-        exit(1);
-    }
-
-    vector<vector<int>> adj = adjoint(mat);
-    vector<vector<int>> inv(n, vector<int>(n));
-
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            inv[i][j] = (adj[i][j] * detInverse) % MOD;
-        }
-    }
-    return inv;
-}
-
-string encrypt(const string& text, const vector<vector<int>>& keyMatrix) {
-    string result = "";
-    int n = keyMatrix.size();
-    string processedText = "";
-
-    for (char c : text) {
-        if (isalpha(c)) {
-            processedText += toupper(c);
-        }
-    }
-
-    // Pad with 'X' if length is not a multiple of n
-    while (processedText.length() % n != 0) {
-        processedText += 'X';
-    }
-
-    for (size_t i = 0; i < processedText.length(); i += n) {
-        vector<int> block(n);
-        for (int j = 0; j < n; j++) {
-            block[j] = processedText[i + j] - 'A';
-        }
-
-        vector<int> cipherBlock(n, 0);
-        for (int j = 0; j < n; j++) {
-            for (int k = 0; k < n; k++) {
-                cipherBlock[j] = (cipherBlock[j] + keyMatrix[j][k] * block[k]) % MOD;
-            }
-        }
-
-        for (int j = 0; j < n; j++) {
-            result += (char)(cipherBlock[j] + 'A');
-        }
+vector<int> multiplyMatrix(vector<vector<int>> key, vector<int> text) {
+    vector<int> result(3);
+    for (int i = 0; i < 3; i++)
+    {
+        result[i] = 0;
+        for (int j = 0; j < 3; j++)
+            result[i] += key[i][j] * text[j];
+        result[i] = result[i] % 26;
     }
     return result;
 }
 
-string decrypt(const string& ciphertext, const vector<vector<int>>& keyMatrix) {
-    vector<vector<int>> invKeyMatrix = inverse(keyMatrix);
-    return encrypt(ciphertext, invKeyMatrix); // Decryption is encryption with inverse key
+int determinant(vector<vector<int>> key) {
+    int det = key[0][0] * (key[1][1] * key[2][2] - key[1][2] * key[2][1]) - key[0][1] * (key[1][0] * key[2][2] - key[1][2] * key[2][0]) + key[0][2] * (key[1][0] * key[2][1] - key[1][1] * key[2][0]);
+    det = (det % 26 + 26) % 26;
+    return det;
+}
+vector<vector<int>> inverseMatrix(vector<vector<int>> key) {
+    int det = determinant(key);
+    int detInv = modInverse(det, 26);
+    if (detInv == -1)
+    {
+        cout << "Key matrix not invertible under mod 26!" << endl;
+        exit(0);
+    }
+    vector<vector<int>> adj(3, vector<int>(3));
+    adj[0][0] = (key[1][1] * key[2][2] - key[1][2] * key[2][1]);
+    adj[0][1] = -(key[1][0] * key[2][2] - key[1][2] * key[2][0]);
+    adj[0][2] = (key[1][0] * key[2][1] - key[1][1] * key[2][0]);
+    adj[1][0] = -(key[0][1] * key[2][2] - key[0][2] * key[2][1]);
+    adj[1][1] = (key[0][0] * key[2][2] - key[0][2] * key[2][0]);
+    adj[1][2] = -(key[0][0] * key[2][1] - key[0][1] * key[2][0]);
+    adj[2][0] = (key[0][1] * key[1][2] - key[0][2] * key[1][1]);
+    adj[2][1] = -(key[0][0] * key[1][2] - key[0][2] * key[1][0]);
+    adj[2][2] = (key[0][0] * key[1][1] - key[0][1] * key[1][0]);
+    vector<vector<int>> inv(3, vector<int>(3));
+    for (int i = 0; i < 3; i++)
+        for (int j = 0; j < 3; j++)
+        {
+            inv[i][j] = adj[j][i];
+            inv[i][j] = (inv[i][j] * detInv) % 26;
+            inv[i][j] = (inv[i][j] + 26) % 26;
+        }
+    return inv;
+}
+
+string encrypt(string text, vector<vector<int>> key) {
+    string result = "";
+    while (text.length() % 3 != 0)
+        text += 'X';
+    for (int i = 0; i < text.length(); i += 3)
+    {
+        vector<int> block(3);
+        for (int j = 0; j < 3; j++)
+            block[j] = text[i + j] - 'A';
+        vector<int> enc = multiplyMatrix(key, block);
+        for (int j = 0; j < 3; j++)
+            result += (enc[j] + 'A');
+    }
+    return result;
+}
+
+string decrypt(string text, vector<vector<int>> key) {
+    vector<vector<int>> invKey = inverseMatrix(key);
+    string result = "";
+    for (int i = 0; i < text.length(); i += 3)
+    {
+        vector<int> block(3);
+        for (int j = 0; j < 3; j++)
+            block[j] = text[i + j] - 'A';
+        vector<int> dec = multiplyMatrix(invKey, block);
+        for (int j = 0; j < 3; j++)
+            result += (dec[j] + 'A');
+    }
+    return result;
 }
 
 int main() {
-    vector<vector<int>> key = {{9, 4}, {5, 7}};
-    string text = "HIIAMINPAINH";
-    string encrypted = encrypt(text, key);
+    string plaintext;
+    cout << "Enter plaintext: ";
+    cin >> plaintext;
+    vector<vector<int>> key = {
+        {6, 24, 1},
+        {13, 16, 10},
+        {20, 17, 15}};
+    string encrypted = encrypt(plaintext, key);
+    cout << "Encrypted text: " << encrypted << endl;
     string decrypted = decrypt(encrypted, key);
-    cout << "Encrypted: " << encrypted << endl;
-    cout << "Decrypted: " << decrypted << endl;
+    cout << "Decrypted text: " << decrypted << endl;
     return 0;
 }

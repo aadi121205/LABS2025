@@ -1,119 +1,68 @@
+// To implement DES sub key generation By Aaditya Bhatia 23/CS/004
 #include <iostream>
-#include <string>
-#include <algorithm> // For std::rotate, a simple way to do circular shifts
-
+#include <vector>
 using namespace std;
 
-// --- Helper Functions ---
+int PC1[56] = {
+    57, 49, 41, 33, 25, 17, 9,
+    1, 58, 50, 42, 34, 26, 18,
+    10, 2, 59, 51, 43, 35, 27,
+    19, 11, 3, 60, 52, 44, 36,
+    63, 55, 47, 39, 31, 23, 15,
+    7, 62, 54, 46, 38, 30, 22,
+    14, 6, 61, 53, 45, 37, 29,
+    21, 13, 5, 28, 20, 12, 4
+};
 
-/**
- * @brief Applies a permutation table to a key.
- * @param key The input key string.
- * @param p The permutation table (array of integers).
- * @param n The size of the permutation table.
- * @return The permuted key string.
- */
-string permute(string key, int* p, int n) {
-    string permuted_key = "";
-    for (int i = 0; i < n; i++) {
-        // P-box indices are 1-based, array indices are 0-based
-        permuted_key += key[p[i] - 1];
-    }
-    return permuted_key;
+int PC2[48] = {
+    14, 17, 11, 24, 1, 5,
+    3, 28, 15, 6, 21, 10,
+    23, 19, 12, 4, 26, 8,
+    16, 7, 27, 20, 13, 2,
+    41, 52, 31, 37, 47, 55,
+    30, 40, 51, 45, 33, 48,
+    44, 49, 39, 56, 34, 53,
+    46, 42, 50, 36, 29, 32
+};
+
+int SHIFTS[16] = {
+    1, 1, 2, 2,
+    2, 2, 2, 2,
+    1, 2, 2, 2,
+    2, 2, 2, 1
+};
+
+string permute(string input, int *table, int n) {
+    string output = "";
+    for (int i = 0; i < n; i++)
+        output += input[table[i] - 1];
+    return output;
 }
 
-/**
- * @brief Performs a circular left shift on a 5-bit string.
- * @param key The 5-bit key half.
- * @param shifts The number of positions to shift.
- * @return The shifted string.
- */
-string left_shift(string key_half, int shifts) {
-    string shifted = key_half;
-    // std::rotate performs a circular left shift
-    // rotate(begin, middle, end)
-    // The element at 'middle' becomes the new first element
-    rotate(shifted.begin(), shifted.begin() + shifts, shifted.end());
-    return shifted;
+string leftRotate(const string &key, int shifts) {
+    return key.substr(shifts) + key.substr(0, shifts);
 }
-
-// --- Main S-DES Key Generation Logic ---
 
 int main() {
-    // --- Define S-DES Parameters ---
-
-    // P10 (Permutation 10) table
-    // Input: (1 2 3 4 5 6 7 8 9 10)
-    // Output: (3 5 2 7 4 10 1 9 8 6)
-    int p10_table[] = { 3, 5, 2, 7, 4, 10, 1, 9, 8, 6 };
-
-    // P8 (Permutation 8) table
-    // Input: (1 2 3 4 5 6 7 8 9 10) <- from the 10-bit shifted key
-    // Output: (6 3 7 4 8 5 10 9)
-    int p8_table[] = { 6, 3, 7, 4, 8, 5, 10, 9 };
-
-    // --- Key Generation Steps ---
-
-    string key_10bit;
-    string k1, k2;
-
-    // 1. Get 10-bit key from user
-    cout << "Enter a 10-bit key (e.g., 1010000010): ";
-    cin >> key_10bit;
-
-    if (key_10bit.length() != 10) {
-        cout << "Error: Key must be 10 bits long." << endl;
+    string key64;
+    cout << "Enter 64-bit key (as binary string): ";
+    cin >> key64;
+    if (key64.size() != 64)
+    {
+        cerr << "Key must be 64 bits" << endl;
         return 1;
     }
-
-    // 2. Apply P10
-    string p10_key = permute(key_10bit, p10_table, 10);
-    cout << "After P10:       " << p10_key << endl;
-
-    // 3. Split into 5-bit halves
-    string left_half = p10_key.substr(0, 5);
-    string right_half = p10_key.substr(5, 5);
-    cout << "Left half:       " << left_half << endl;
-    cout << "Right half:      " << right_half << endl;
-    cout << "---------------------------------" << endl;
-
-
-    // --- Generate K1 ---
-    
-    // 4. Apply LS-1 (Circular Left Shift by 1)
-    string ls1_left = left_shift(left_half, 1);
-    string ls1_right = left_shift(right_half, 1);
-    cout << "After LS-1 Left:  " << ls1_left << endl;
-    cout << "After LS-1 Right: " << ls1_right << endl;
-
-    // 5. Combine halves and apply P8 to get K1
-    string combined_k1 = ls1_left + ls1_right;
-    cout << "Combined for K1: " << combined_k1 << endl;
-    k1 = permute(combined_k1, p8_table, 8);
-    
-    cout << "---------------------------------" << endl;
-
-
-    // --- Generate K2 ---
-
-    // 6. Apply LS-2 (Circular Left Shift by 2) to the *already shifted* halves (ls1)
-    string ls2_left = left_shift(ls1_left, 2);
-    string ls2_right = left_shift(ls1_right, 2);
-    cout << "After LS-2 Left:  " << ls2_left << endl;
-    cout << "After LS-2 Right: " << ls2_right << endl;
-
-    // 7. Combine halves and apply P8 to get K2
-    string combined_k2 = ls2_left + ls2_right;
-    cout << "Combined for K2: " << combined_k2 << endl;
-    k2 = permute(combined_k2, p8_table, 8);
-
-
-    // --- Final Output ---
-    cout << "=================================" << endl;
-    cout << "Initial 10-bit Key: " << key_10bit << endl;
-    cout << "Subkey K1:          " << k1 << endl;
-    cout << "Subkey K2:          " << k2 << endl;
-    cout << "=================================" << endl;
-
+    string key56 = permute(key64, PC1, 56);
+    string C = key56.substr(0, 28);
+    string D = key56.substr(28, 28);
+    cout << "Round Subkeys:" << endl;
+    for (int round = 0; round < 16; round++)
+    {
+        C = leftRotate(C, SHIFTS[round]);
+        D = leftRotate(D, SHIFTS[round]);
+        string CD = C + D;
+        string subkey = permute(CD, PC2, 48);
+        cout << "Round " << round + 1 << ": " << subkey << endl;
+    }
     return 0;
 }
