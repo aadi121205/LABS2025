@@ -1,5 +1,5 @@
-// Write a program to count the spaces and number of lines.
-// made by Aaditya Bhatia
+
+
 
 #include <iostream>
 #include <fstream>

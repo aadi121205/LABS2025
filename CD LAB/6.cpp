@@ -1,11 +1,8 @@
+// Implementation of OPERATOR PRECEDENCE PARSER
 #include <bits/stdc++.h>
 using namespace std;
 
 vector<char> symbols = {'+', '-', '*', '/', 'i', '$'};
-
-// OPERATOR GRAMMAR
-// E → E + E | E - E | E * E | E / E | i
-
 
 vector<vector<char>> precedence = {
     // +    -    *    /    i    $

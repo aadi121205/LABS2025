@@ -1,3 +1,5 @@
+// Implementation of SHIFT REDUCE PARSING ALGORITHM
+
 #include <bits/stdc++.h>
 using namespace std;
 

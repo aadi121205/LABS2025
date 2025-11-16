@@ -1,11 +1,12 @@
-// RSA Encryption and Decryption in C++ by Aaditya Bhatia 23/CS/004
+// To implement RSA encryption-decryption.
+// By Aaditya Bhatia 23/CS/004
 
 #include <iostream>
 #include <vector>
 using namespace std;
 
 int gcd(int a, int b) {
-    return b == 0 ? a : gcd(a, b % a);
+    return b == 0 ? a : gcd(b, a % b);
 }
 
 long long modPow(long long base, long long exp, long long mod) {
@@ -59,6 +60,6 @@ int main() {
     {
         decryptedText += (char)modPow(c, d, n);
     }
-    cout << decryptedText << endl;
+    cout << "Decrypted Text: " << decryptedText << endl;
     return 0;
 }
